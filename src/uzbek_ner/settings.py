@@ -28,7 +28,17 @@ class Settings(BaseSettings):
         alias="MLFLOW_SMOKE_EXPERIMENT",
     )
 
-    data_raw: Path = REPO_ROOT / "data" / "raw"
+    data_official: Path = REPO_ROOT / "data" / "official"
+    official_bundle: Path = (
+        REPO_ROOT / "data" / "official" / "bundle" / "ner_uz_hackathon_participant"
+    )
+    official_train: Path = REPO_ROOT / "data" / "official" / "train.jsonl"
+    official_dev: Path = REPO_ROOT / "data" / "official" / "dev.jsonl"
+    official_scripts: Path = (
+        REPO_ROOT / "data" / "official" / "bundle" / "ner_uz_hackathon_participant" / "scripts"
+    )
+    data_external: Path = REPO_ROOT / "data" / "external"
+    data_raw: Path = REPO_ROOT / "data" / "official"  # legacy alias → official
     data_processed: Path = REPO_ROOT / "data" / "processed"
     checkpoints: Path = REPO_ROOT / "checkpoints"
     models: Path = REPO_ROOT / "models"

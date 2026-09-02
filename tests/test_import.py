@@ -10,7 +10,8 @@ def test_version() -> None:
 def test_settings_defaults() -> None:
     settings = get_settings()
     assert settings.mlflow_experiment == "uzbek_ner"
-    assert settings.data_raw.name == "raw"
+    assert settings.data_official.name == "official"
+    assert settings.official_dev.name == "dev.jsonl"
 
 
 def test_tracking_constants() -> None:

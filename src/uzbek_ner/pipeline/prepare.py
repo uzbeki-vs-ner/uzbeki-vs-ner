@@ -1,4 +1,4 @@
-"""Stage: prepare — validate raw data layout and emit processed placeholder."""
+"""Stage: prepare — validate official organizer data and emit processed manifest."""
 
 from __future__ import annotations
 
@@ -11,23 +11,37 @@ from omegaconf import DictConfig, OmegaConf
 from uzbek_ner.settings import Settings, get_settings
 from uzbek_ner.tracking import RESEARCH_EXPERIMENT, log_json, log_params, setup_experiment
 
-
-def _expected_raw_files(data_raw: Path) -> list[str]:
-    return ["train.json", "val.json"]
+OFFICIAL_FILES = ("train.jsonl", "dev.jsonl", "dataset_manifest.json")
 
 
 def run_prepare(cfg: DictConfig, settings: Settings | None = None) -> Path:
     runtime = settings or get_settings()
     runtime.data_processed.mkdir(parents=True, exist_ok=True)
+    official = runtime.data_official
 
-    raw_files = _expected_raw_files(runtime.data_raw)
-    missing = [name for name in raw_files if not (runtime.data_raw / name).exists()]
+    missing = [name for name in OFFICIAL_FILES if not (official / name).exists()]
+    stats: dict[str, object] = {}
+
+    if not missing:
+        manifest_src = json.loads((official / "dataset_manifest.json").read_text(encoding="utf-8"))
+        stats = {
+            "source": "official",
+            "priority": 1,
+            "train_records": manifest_src["splits"]["train"]["records"],
+            "dev_records": manifest_src["splits"]["dev"]["records"],
+            "labels": manifest_src["schema"]["labels"],
+        }
 
     manifest = {
         "status": "ready" if not missing else "waiting_for_data",
-        "raw_dir": str(runtime.data_raw),
-        "expected_files": raw_files,
+        "source": "official",
+        "priority": 1,
+        "official_dir": str(official),
+        "expected_files": list(OFFICIAL_FILES),
         "missing_files": missing,
+        "stats": stats,
+        "external_dir": str(runtime.data_external),
+        "external_note": "augmentation only — do not mix with official dev for reporting",
         "prepare": OmegaConf.to_container(cfg.prepare, resolve=True),
     }
     manifest_path = runtime.data_processed / "manifest.json"
@@ -39,11 +53,13 @@ def run_prepare(cfg: DictConfig, settings: Settings | None = None) -> Path:
 
     if missing:
         logger.warning(
-            "Raw dataset not found yet ({}). Place files into {} and rerun.",
+            "Official dataset incomplete ({}). Expected under {}.",
             ", ".join(missing),
-            runtime.data_raw,
+            official,
         )
     else:
-        logger.info("Prepare stage finished: {}", manifest_path)
+        logger.info(
+            "Official data OK: train={}, dev={}", stats["train_records"], stats["dev_records"]
+        )
 
     return manifest_path
