@@ -1,0 +1,70 @@
+[project]
+name = "uzbek-ner"
+version = "0.1.0"
+description = "Uzbek NER — ITMO × Brand Analytics hackathon"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Daniil Sereda", email = "marvolo04@mail.ru" }]
+dependencies = [
+    "accelerate>=1.4",
+    "datasets>=3.0",
+    "dvc>=3.59",
+    "fastapi>=0.115",
+    "gliner>=0.2",
+    "httpx>=0.28",
+    "hydra-core>=1.3",
+    "loguru>=0.7",
+    "mlflow>=3.0",
+    "omegaconf>=2.3",
+    "pandas>=2.2",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.8",
+    "python-dotenv>=1.1",
+    "rich>=13.9",
+    "scikit-learn>=1.5",
+    "seqeval>=1.2",
+    "torch>=2.6",
+    "transformers>=4.51",
+    "typer>=0.15",
+    "uvicorn[standard]>=0.34",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "ruff>=0.9",
+]
+
+[project.scripts]
+ner = "uzbek_ner.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uzbek_ner"]
+
+[tool.ruff]
+src = ["src"]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "data", "checkpoints", "models", "mlruns", ".dvc"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["uzbek_ner"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["--strict-markers"]
+
+[tool.uv]
+package = true

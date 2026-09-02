@@ -1,0 +1,34 @@
+# Hydra-конфиг по умолчанию. Переопределение:
+#   uv run ner train --config-name default train.epochs=5
+
+defaults:
+  - _self_
+
+seed: ${oc.env:SEED,42}
+
+paths:
+  data_raw: data/raw
+  data_processed: data/processed
+  checkpoints: checkpoints
+  models: models
+  metrics: metrics.json
+
+mlflow:
+  tracking_uri: ${oc.env:MLFLOW_TRACKING_URI,sqlite:///mlflow.db}
+  experiment: ${oc.env:MLFLOW_EXPERIMENT,uzbek_ner}
+  smoke_experiment: ${oc.env:MLFLOW_SMOKE_EXPERIMENT,uzbek_ner_smoke}
+
+prepare:
+  max_length: 512
+  stride: 128
+
+train:
+  model_name: rifkat/uztext-3Gb-BPE-Roberta
+  learning_rate: 2.0e-5
+  batch_size: 16
+  epochs: 3
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+
+evaluate:
+  batch_size: 32

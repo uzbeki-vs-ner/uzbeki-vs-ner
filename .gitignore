@@ -1,0 +1,74 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+outputs/
+
+# IDE / tooling
+.vscode/
+.idea/
+.cursor/
+.opencode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Data & model artifacts (DVC tracks blobs; git keeps only .dvc pointers)
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/README.md
+data/processed/*
+!data/processed/.gitkeep
+checkpoints/*
+!checkpoints/.gitkeep
+models/*
+!models/.gitkeep
+*.pt
+*.bin
+*.safetensors
+
+# MLflow (local sqlite + artifact store)
+mlruns/
+mlartifacts/
+mlflow.db
+mlflow.db-*
+
+# DVC cache (never commit)
+.dvc/cache/
+.dvc/tmp/
+
+# Logs & caches
+*.log
+.pytest_cache/
+.ipynb_checkpoints/
+*.ipynb
+.runs/
+
+# Hydra
+multirun/
+.hydra/
+
+# Docker / runtime
+.docker/
+/checkpoints

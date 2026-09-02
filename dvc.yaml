@@ -1,0 +1,51 @@
+# Воспроизводимый пайплайн: prepare → train → evaluate
+# Запуск: uv run dvc repro
+# Сравнение экспериментов: uv run dvc exp show
+
+vars:
+  - params.yaml
+
+stages:
+  prepare:
+    cmd: uv run ner prepare
+    deps:
+      - src/uzbek_ner
+      - params.yaml
+      - configs/default.yaml
+    params:
+      - params.yaml:
+          - seed
+          - prepare
+    outs:
+      - data/processed:
+          persist: true
+
+  train:
+    cmd: uv run ner train
+    deps:
+      - src/uzbek_ner
+      - data/processed
+      - params.yaml
+      - configs/default.yaml
+    params:
+      - params.yaml:
+          - seed
+          - train
+    outs:
+      - checkpoints:
+          persist: true
+
+  evaluate:
+    cmd: uv run ner evaluate
+    deps:
+      - src/uzbek_ner
+      - checkpoints
+      - data/processed
+      - params.yaml
+    params:
+      - params.yaml:
+          - seed
+          - evaluate
+    metrics:
+      - metrics.json:
+          cache: false

@@ -1,0 +1,19 @@
+# Гиперпараметры для DVC pipeline и воспроизводимых экспериментов.
+# Меняй здесь — `dvc repro` подхватит diff автоматически.
+
+seed: 42
+
+prepare:
+  max_length: 512
+  stride: 128
+
+train:
+  model_name: rifkat/uztext-3Gb-BPE-Roberta
+  learning_rate: 2.0e-5
+  batch_size: 16
+  epochs: 3
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+
+evaluate:
+  batch_size: 32

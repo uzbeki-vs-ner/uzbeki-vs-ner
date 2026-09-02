@@ -1,0 +1,9 @@
+{
+  "micro_f1": 0.0,
+  "micro_precision": 0.0,
+  "micro_recall": 0.0,
+  "org_f1": 0.0,
+  "name_f1": 0.0,
+  "geo_f1": 0.0,
+  "status": "stub"
+}

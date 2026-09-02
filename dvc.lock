@@ -1,0 +1,99 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: uv run ner prepare
+    deps:
+    - path: configs/default.yaml
+      hash: md5
+      md5: 3d26681cd34e5bf11e3502f7b5555563
+      size: 726
+    - path: params.yaml
+      hash: md5
+      md5: f91bc205b193e8d1333704c5ea3c609a
+      size: 431
+    - path: src/uzbek_ner
+      hash: md5
+      md5: eaabbf23481cb62512064cbfaa350053.dir
+      size: 10666
+      nfiles: 9
+    params:
+      params.yaml:
+        prepare:
+          max_length: 512
+          stride: 128
+        seed: 42
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: b83c71acb4e92ded594a5f6469948c38.dir
+      size: 270
+      nfiles: 2
+  train:
+    cmd: uv run ner train
+    deps:
+    - path: configs/default.yaml
+      hash: md5
+      md5: 3d26681cd34e5bf11e3502f7b5555563
+      size: 726
+    - path: data/processed
+      hash: md5
+      md5: b83c71acb4e92ded594a5f6469948c38.dir
+      size: 270
+      nfiles: 2
+    - path: params.yaml
+      hash: md5
+      md5: f91bc205b193e8d1333704c5ea3c609a
+      size: 431
+    - path: src/uzbek_ner
+      hash: md5
+      md5: eaabbf23481cb62512064cbfaa350053.dir
+      size: 10666
+      nfiles: 9
+    params:
+      params.yaml:
+        seed: 42
+        train:
+          model_name: rifkat/uztext-3Gb-BPE-Roberta
+          learning_rate: 2e-05
+          batch_size: 16
+          epochs: 3
+          weight_decay: 0.01
+          warmup_ratio: 0.1
+    outs:
+    - path: checkpoints
+      hash: md5
+      md5: a4613ed554a62e478713b053308e67fa.dir
+      size: 291
+      nfiles: 2
+  evaluate:
+    cmd: uv run ner evaluate
+    deps:
+    - path: checkpoints
+      hash: md5
+      md5: a4613ed554a62e478713b053308e67fa.dir
+      size: 291
+      nfiles: 2
+    - path: data/processed
+      hash: md5
+      md5: b83c71acb4e92ded594a5f6469948c38.dir
+      size: 270
+      nfiles: 2
+    - path: params.yaml
+      hash: md5
+      md5: f91bc205b193e8d1333704c5ea3c609a
+      size: 431
+    - path: src/uzbek_ner
+      hash: md5
+      md5: eaabbf23481cb62512064cbfaa350053.dir
+      size: 10666
+      nfiles: 9
+    params:
+      params.yaml:
+        evaluate:
+          batch_size: 32
+        seed: 42
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: 9e0102b829b762b4cdfa56a8d50fa7ca
+      size: 142

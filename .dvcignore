@@ -1,0 +1,11 @@
+# DVC should not hash virtualenvs, caches, or experiment tracking stores
+.venv/
+.ruff_cache/
+.pytest_cache/
+mlruns/
+mlartifacts/
+mlflow.db
+mlflow.db-*
+outputs/
+.runs/
+__pycache__/
