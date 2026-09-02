@@ -78,16 +78,18 @@ CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `uv sync --frozen
 
 ```
 ├── CASE.md
-├── configs/             # Hydra
-├── params.yaml          # DVC params
-├── dvc.yaml             # DVC pipeline
-├── src/uzbek_ner/       # код
+├── AGENTS.md             # commit/CI/data rules for agents
+├── configs/              # Hydra
+├── params.yaml           # DVC params
+├── dvc.yaml              # DVC pipeline (committed; cache is not)
+├── src/uzbek_ner/        # код
 ├── tests/
 ├── scripts/
-├── data/raw/            # сырые данные (DVC)
-├── data/processed/      # артефакты prepare
-├── checkpoints/         # веса
-└── models/              # экспорт для инференса
+├── data/official/        # организаторы (jsonl/zip/bundle gitignored)
+├── data/external/        # публичные датасеты (blobs gitignored; CATALOG.md да)
+├── data/processed/       # артефакты prepare
+├── checkpoints/          # веса (gitignored)
+└── models/pretrained/    # HF dumps (gitignored)
 ```
 
 ## Линт и типы

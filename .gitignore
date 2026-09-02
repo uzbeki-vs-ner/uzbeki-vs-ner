@@ -12,12 +12,17 @@ ENV/
 *.egg-info/
 dist/
 build/
-outputs/
 
-# IDE / tooling
+# Runtime outputs — keep only the placeholder
+/outputs/*
+!/outputs/.gitkeep
+
+# IDE / tooling (commit shared Cursor rules, ignore the rest)
 .vscode/
 .idea/
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .opencode/
 *.swp
 *.swo
@@ -34,19 +39,51 @@ Thumbs.db
 *.pem
 *.key
 
-# Data & model artifacts (DVC tracks blobs; git keeps only .dvc pointers)
+# Data & model artifacts (DVC tracks blobs; git keeps only pointers + docs)
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/README.md
+
+# Official organizer dumps — never GitHub
+data/official/bundle/
+data/official/archive/
+data/official/*.jsonl
+data/official/*.zip
+data/official/*
+!data/official/README.md
+!data/official/.gitkeep
+
 data/processed/*
 !data/processed/.gitkeep
-checkpoints/*
-!checkpoints/.gitkeep
-models/*
+
+# External datasets (HF / Zenodo / etc.) — never GitHub
+data/external/**
+!data/external/CATALOG.md
+!data/external/.gitkeep
+
+ner_uz_hackathon_participant*.zip
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
+/checkpoints/*
+!/checkpoints/.gitkeep
+
+# Weights / exports / pretrained dumps
+models/pretrained/**
+models/**
 !models/.gitkeep
 *.pt
+*.pth
 *.bin
+*.ckpt
+*.onnx
 *.safetensors
+*.h5
+*.gguf
+*.npz
 
 # MLflow (local sqlite + artifact store)
 mlruns/
@@ -54,7 +91,17 @@ mlartifacts/
 mlflow.db
 mlflow.db-*
 
-# DVC cache (never commit)
+# Hugging Face / transformers / datasets caches (never commit downloads)
+.cache/
+**/.cache/
+.huggingface/
+huggingface_hub/
+hf_cache/
+.hf/
+transformers_cache/
+.transformers_cache/
+
+# DVC cache (never commit). dvc.yaml / dvc.lock ARE source and may be committed.
 .dvc/cache/
 .dvc/tmp/
 
@@ -64,6 +111,8 @@ mlflow.db-*
 .ipynb_checkpoints/
 *.ipynb
 .runs/
+wandb/
+lightning_logs/
 
 # Hydra
 multirun/
@@ -71,4 +120,3 @@ multirun/
 
 # Docker / runtime
 .docker/
-/checkpoints

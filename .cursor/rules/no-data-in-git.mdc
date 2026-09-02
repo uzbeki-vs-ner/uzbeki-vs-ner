@@ -1,0 +1,17 @@
+---
+description: Keep GitHub a code platform — never commit data, weights, or MLflow
+alwaysApply: true
+---
+
+# No data dumps in git
+
+GitHub is for **code**. Do not add or commit:
+
+- `data/official/` dumps (`*.jsonl`, `bundle/`, `archive/`, zips)
+- `data/external/` Hugging Face / Zenodo blobs
+- `models/pretrained/**`, `*.pt` / `*.bin` / `*.safetensors`
+- `checkpoints/`, `outputs/` (except `.gitkeep`)
+- `mlflow.db`, `mlruns/`, `mlartifacts/`
+- `.venv/`, Hugging Face caches
+
+Keep README / CATALOG / `.gitkeep` / `dvc.yaml` / `dvc.lock`. If `git status` shows a dataset or weight, fix `.gitignore` instead of adding it.

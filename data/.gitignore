@@ -1,1 +1,3 @@
-/processed
+# Processed pipeline artifacts — keep the placeholder (mirrors root .gitignore)
+/processed/*
+!/processed/.gitkeep

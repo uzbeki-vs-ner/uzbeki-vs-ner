@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-GITHUB_REMOTE="${GITHUB_REMOTE:-git@github.com:bugkira/ITMO_hack.git}"
+GITHUB_REMOTE="${GITHUB_REMOTE:-git@github.com:uzbeki-vs-ner/uzbeki-vs-ner.git}"
 GIT_USER_NAME="${GIT_USER_NAME:-Daniil Sereda}"
 # Global git uses dsereda@ptsecurity.com — personal email for public GitHub:
 GIT_USER_EMAIL="${GIT_USER_EMAIL:-marvolo04@mail.ru}"
@@ -35,7 +35,7 @@ else
 fi
 
 git config --local remote.origin.pushurl "$GITHUB_REMOTE"
-chmod +x .githooks/pre-push 2>/dev/null || true
+chmod +x .githooks/pre-push .githooks/commit-msg 2>/dev/null || true
 
 echo ""
 echo "Local git configured:"

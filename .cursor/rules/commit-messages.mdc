@@ -1,0 +1,16 @@
+---
+description: Require detailed git commit messages (subject + body explaining why)
+alwaysApply: true
+---
+
+# Commit messages
+
+When creating a git commit, write a **detailed** message. Never use one-liners like `wip`, `fix`, `update`, or `misc`.
+
+Required shape (Conventional Commits subject is OK):
+
+1. Subject: imperative, specific, ~50–72 chars (`ci: add GitHub Actions lint/test workflow`)
+2. Blank line
+3. Body: at least a few sentences or bullet points covering **why**, what a reviewer should know, and any follow-ups
+
+The local hook `.githooks/commit-msg` rejects thin messages. Do not skip it with `--no-verify`.

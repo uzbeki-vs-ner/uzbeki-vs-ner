@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Require a detailed commit message: subject, blank line, and a real body.
+# Conventional Commits subjects are fine; one-liners like "wip" / "fix" are not.
+set -euo pipefail
+
+MSG_FILE="${1:-}"
+if [[ -z "$MSG_FILE" || ! -f "$MSG_FILE" ]]; then
+  echo "commit-msg: missing commit message file" >&2
+  exit 1
+fi
+
+git_dir="$(git rev-parse --git-dir 2>/dev/null || true)"
+# Do not block git's own merge/rebase/cherry-pick/revert machinery.
+if [[ -n "$git_dir" ]]; then
+  for marker in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD REBASE_HEAD; do
+    if [[ -f "$git_dir/$marker" ]]; then
+      exit 0
+    fi
+  done
+fi
+
+mapfile -t raw_lines < "$MSG_FILE"
+
+filtered=()
+for line in "${raw_lines[@]}"; do
+  # Strip Git comment lines and scissors; keep everything else.
+  if [[ "$line" =~ ^# ]]; then
+    continue
+  fi
+  if [[ "$line" == "------------------------ >8 ------------------------" ]]; then
+    break
+  fi
+  filtered+=("$line")
+done
+
+# Trim leading empty lines
+start=0
+while (( start < ${#filtered[@]} )) && [[ -z "${filtered[$start]// }" ]]; do
+  start=$((start + 1))
+done
+
+if (( start >= ${#filtered[@]} )); then
+  echo "commit-msg: empty commit message." >&2
+  exit 1
+fi
+
+subject="${filtered[$start]}"
+subject="${subject#"${subject%%[![:space:]]*}"}"
+subject="${subject%"${subject##*[![:space:]]}"}"
+
+# Allow automated merge/revert subjects if they slip through without MERGE_HEAD.
+if [[ "$subject" =~ ^Merge(\ |$) ]] || [[ "$subject" =~ ^Revert(\ |$) ]]; then
+  exit 0
+fi
+
+lc_subject="$(printf '%s' "$subject" | tr '[:upper:]' '[:lower:]')"
+denylist='^(wip|fix|fixed|hotfix|tmp|temp|update|updates|misc|stuff|ok|test|tests|commit|changes|chore|typo)s?[[:punct:]]*$'
+if [[ "$lc_subject" =~ $denylist ]]; then
+  echo "commit-msg: subject is too vague ('$subject')." >&2
+  echo "Explain what changed and why — not just 'wip' or 'fix'." >&2
+  exit 1
+fi
+
+if (( ${#subject} < 10 )); then
+  echo "commit-msg: subject is too short ('$subject'). Use at least ~10 characters." >&2
+  exit 1
+fi
+
+# Require a blank line after the subject.
+if (( start + 1 >= ${#filtered[@]} )) || [[ -n "${filtered[$((start + 1))]// }" ]]; then
+  echo "commit-msg: missing blank line after the subject." >&2
+  echo "Use: subject, empty line, then a body that explains WHY." >&2
+  exit 1
+fi
+
+body_lines=()
+body_chars=0
+for (( i = start + 2; i < ${#filtered[@]}; i++ )); do
+  line="${filtered[$i]}"
+  # Ignore Signed-off-by / Co-authored-by trailers when judging substance.
+  if [[ "$line" =~ ^(Signed-off-by|Co-authored-by|Change-Id): ]]; then
+    continue
+  fi
+  trimmed="${line#"${line%%[![:space:]]*}"}"
+  if [[ -n "$trimmed" ]]; then
+    body_lines+=("$trimmed")
+    body_chars=$((body_chars + ${#trimmed}))
+  fi
+done
+
+if (( ${#body_lines[@]} < 2 && body_chars < 150 )); then
+  echo "commit-msg: body is too thin (${#body_lines[@]} content line(s), ${body_chars} chars)." >&2
+  echo "Add at least a few sentences or bullet points explaining why this change exists," >&2
+  echo "what it does, and anything a reviewer should know." >&2
+  echo "" >&2
+  echo "Example:" >&2
+  echo "  ci: run lint and tests on GitHub Actions" >&2
+  echo "" >&2
+  echo "  Add a CI workflow so every push to main is linted and tested without" >&2
+  echo "  downloading datasets or starting MLflow. This keeps GitHub a code" >&2
+  echo "  platform and catches format/type regressions before they land." >&2
+  exit 1
+fi
+
+exit 0
