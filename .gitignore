@@ -58,6 +58,10 @@ data/official/*
 
 data/processed/*
 !data/processed/.gitkeep
+# Silver jsonl blobs stay local; commit only the README that explains them.
+!data/processed/silver/
+data/processed/silver/**
+!data/processed/silver/README.md
 
 # External datasets (HF / Zenodo / etc.) — never GitHub
 data/external/**

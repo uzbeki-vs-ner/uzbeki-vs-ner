@@ -1,3 +1,6 @@
 # Processed pipeline artifacts — keep the placeholder (mirrors root .gitignore)
 /processed/*
 !/processed/.gitkeep
+!/processed/silver/
+/processed/silver/**
+!/processed/silver/README.md

@@ -24,3 +24,5 @@
 ## External (дополнение)
 
 См. [`external/CATALOG.md`](external/CATALOG.md) и `external/manifest.json`.
+
+Mapped silver JSONL (augmentation only): `processed/silver/` — regenerate with `uv run python scripts/extract_silver.py`. Counts and caveats: [`docs/SILVER_EXTRACT.md`](../docs/SILVER_EXTRACT.md).
