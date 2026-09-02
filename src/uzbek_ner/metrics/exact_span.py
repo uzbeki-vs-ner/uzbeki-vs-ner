@@ -139,7 +139,12 @@ def calculate_exact_span_metrics(
     }
 
 
-def evaluate_prediction_files(gold_path: Path, predictions_path: Path) -> JsonObject:
+def load_gold_and_predictions(
+    gold_path: Path,
+    predictions_path: Path,
+) -> tuple[dict[str, JsonObject], dict[str, set[EntityKey]]]:
+    """Load and align gold/prediction JSONL the same way as the organizer scorer."""
+
     gold_records = read_jsonl_records(gold_path, require_entities=True)
     gold = _gold_by_hash(gold_records, gold_path)
     predictions = _predictions_by_hash(
@@ -147,6 +152,11 @@ def evaluate_prediction_files(gold_path: Path, predictions_path: Path) -> JsonOb
         predictions_path,
         gold,
     )
+    return gold, predictions
+
+
+def evaluate_prediction_files(gold_path: Path, predictions_path: Path) -> JsonObject:
+    gold, predictions = load_gold_and_predictions(gold_path, predictions_path)
     return calculate_exact_span_metrics(gold, predictions)
 
 
