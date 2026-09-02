@@ -49,6 +49,7 @@ build-backend = "hatchling.build"
 packages = ["src/uzbek_ner"]
 
 [tool.ruff]
+# Paths must stay in sync with Makefile / CI / pre-commit: src tests scripts
 src = ["src", "tests", "scripts"]
 line-length = 100
 target-version = "py311"
@@ -73,6 +74,7 @@ docstring-code-format = true
 python_version = "3.11"
 mypy_path = "src"
 explicit_package_bases = true
+# `uv run mypy` (Makefile typecheck / lint, CI, pre-commit) uses this list.
 files = ["src"]
 exclude = ["(?x)(^tests/|^scripts/|^data/|^checkpoints/|^models/|^mlruns/)"]
 show_error_codes = true

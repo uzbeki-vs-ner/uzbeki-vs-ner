@@ -1,3 +1,5 @@
+# Same contract as Makefile/CI: ruff on src/tests/scripts, `uv run mypy` (pyproject).
+# Pytest is `make test` / CI only.
 fail_fast: false
 
 repos:

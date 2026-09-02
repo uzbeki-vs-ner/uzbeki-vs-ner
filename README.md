@@ -72,7 +72,7 @@ chmod +x .githooks/commit-msg .githooks/pre-push
 - **commit-msg** — тема + пустая строка + тело (почему). Однострочники вроде `wip` / `fix` отклоняются. Подробнее: [`.githooks/README.md`](.githooks/README.md).
 - **pre-push** — блок корпоративных remote.
 
-CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `uv sync --frozen --all-groups`, ruff, mypy, pytest. Без скачивания моделей/датасетов и без MLflow UI.
+CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — Python 3.11, `uv sync --frozen --all-groups`, затем **`make lint`** и **`make test`**. Без скачивания моделей/датасетов и без MLflow UI. Команды линта/тестов не дублировать: источник истины — `Makefile` (см. ниже).
 
 ## Структура
 
@@ -94,18 +94,18 @@ CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `uv sync --frozen
 
 ## Линт и типы
 
-Ruff (lint + format) и MyPy настроены в `pyproject.toml`. Проверяется наш код в `src/uzbek_ner`; сторонние ML-библиотеки (torch, transformers, datasets, mlflow, hydra, omegaconf, gliner, seqeval и т.п.) не требуют стабов — для них включён `ignore_missing_imports`.
+Один контракт для локальной разработки, pre-commit и GitHub Actions. Конфиг инструментов — `pyproject.toml`; **команды — `Makefile`** (`make lint`, `make test`). Порядок: ruff check → ruff format --check → mypy → pytest.
+
+Ruff смотрит `src tests scripts`. MyPy — `uv run mypy` (в pyproject сейчас `files = ["src"]`); сторонние ML-библиотеки (torch, transformers, datasets, mlflow, hydra, omegaconf, gliner, seqeval и т.п.) не требуют стабов — для них включён `ignore_missing_imports`.
 
 ```bash
 make fmt          # ruff format + ruff check --fix
 make lint         # ruff check + ruff format --check + mypy
 make typecheck    # только mypy
-uv run ruff check src tests scripts
-uv run ruff format --check src tests scripts
-uv run mypy
+make test         # pytest
 ```
 
-Pre-commit гоняет `ruff-format`, `ruff` и `uv run mypy` по `src/` (без обучающих скриптов).
+Pre-commit гоняет `ruff-format` и `ruff` по `src|tests|scripts` и `uv run mypy` по `src/`. Pytest — только `make test` / CI.
 
 ## Команды
 

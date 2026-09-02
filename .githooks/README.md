@@ -8,7 +8,7 @@ git config core.hooksPath .githooks
 chmod +x .githooks/commit-msg .githooks/pre-push
 ```
 
-`make hooks` still installs [pre-commit](https://pre-commit.com/) (ruff, large-file check). That is separate from these Git hooks.
+`make hooks` still installs [pre-commit](https://pre-commit.com/) (`ruff-format` + `ruff` on `src|tests|scripts`, `uv run mypy`). That is separate from these Git hooks. Full CI contract is `make lint` then `make test`.
 
 ## `commit-msg`
 
