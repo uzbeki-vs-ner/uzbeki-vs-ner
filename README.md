@@ -11,7 +11,7 @@
 - **MLflow** — эксперименты, метрики, артефакты (`sqlite:///mlflow.db`)
 - **DVC** — версионирование данных и воспроизводимый пайплайн (`dvc.yaml`)
 - **Hydra + Typer** — конфиги и CLI
-- **Ruff + pre-commit** — форматирование и линт
+- **Ruff + MyPy + pre-commit** — форматирование, линт и проверка типов
 
 ## Быстрый старт
 
@@ -55,16 +55,24 @@ make mlflow-ui         # http://127.0.0.1:5000
 
 Эксперименты: `uzbek_ner` (основной), `uzbek_ner_smoke` (отладочные прогоны).
 
-## Git (личный GitHub: bugkira)
+## Git
 
-Глобальный git на машине — `dsereda@ptsecurity.com`. В репозитории локально: `marvolo04@mail.ru` + SSH `git@github.com:bugkira/...`.
+Репозиторий: `git@github.com:uzbeki-vs-ner/uzbeki-vs-ner.git`.
+
+GitHub — **код**, не дамп: не коммить `data/official` / `data/external` датасеты, zip, jsonl, `models/pretrained`, чекпоинты, `mlflow.db` / `mlruns`. README, CATALOG, `.gitkeep`, `dvc.yaml` / `dvc.lock` — можно.
 
 ```bash
-./scripts/git_init_github.sh
-ssh -T git@github.com   # Hi bugkira!
+./scripts/git_init_github.sh   # user.email, origin, core.hooksPath=.githooks
+git config core.hooksPath .githooks
+chmod +x .githooks/commit-msg .githooks/pre-push
 ```
 
-Перед первым push создай пустой репозиторий `bugkira/ITMO_hack` на GitHub.
+Хуки:
+
+- **commit-msg** — тема + пустая строка + тело (почему). Однострочники вроде `wip` / `fix` отклоняются. Подробнее: [`.githooks/README.md`](.githooks/README.md).
+- **pre-push** — блок корпоративных remote.
+
+CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `uv sync --frozen --all-groups`, ruff, mypy, pytest. Без скачивания моделей/датасетов и без MLflow UI.
 
 ## Структура
 
@@ -81,6 +89,21 @@ ssh -T git@github.com   # Hi bugkira!
 ├── checkpoints/         # веса
 └── models/              # экспорт для инференса
 ```
+
+## Линт и типы
+
+Ruff (lint + format) и MyPy настроены в `pyproject.toml`. Проверяется наш код в `src/uzbek_ner`; сторонние ML-библиотеки (torch, transformers, datasets, mlflow, hydra, omegaconf, gliner, seqeval и т.п.) не требуют стабов — для них включён `ignore_missing_imports`.
+
+```bash
+make fmt          # ruff format + ruff check --fix
+make lint         # ruff check + ruff format --check + mypy
+make typecheck    # только mypy
+uv run ruff check src tests scripts
+uv run ruff format --check src tests scripts
+uv run mypy
+```
+
+Pre-commit гоняет `ruff-format`, `ruff` и `uv run mypy` по `src/` (без обучающих скриптов).
 
 ## Команды
 

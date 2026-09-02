@@ -15,5 +15,18 @@ repos:
     rev: v0.14.3
     hooks:
       - id: ruff-format
+        files: ^(src|tests|scripts)/
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        files: ^(src|tests|scripts)/
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        files: ^src/
+        pass_filenames: false
+        require_serial: true

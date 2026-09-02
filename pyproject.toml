@@ -32,6 +32,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel>=6.29",
+    "mypy>=2.3.1",
     "pre-commit>=4.0",
     "pytest>=8.3",
     "ruff>=0.9",
@@ -48,17 +49,73 @@ build-backend = "hatchling.build"
 packages = ["src/uzbek_ner"]
 
 [tool.ruff]
-src = ["src"]
+src = ["src", "tests", "scripts"]
 line-length = 100
 target-version = "py311"
-exclude = [".venv", "data", "checkpoints", "models", "mlruns", ".dvc"]
+exclude = [".venv", "data", "checkpoints", "models", "mlruns", ".dvc", "outputs"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "C4", "PIE"]
+ignore = [
+    "E501",
+    "RUF002",  # project branding uses ×
+    "RUF003",  # project copy uses en/em dashes
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["uzbek_ner"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+explicit_package_bases = true
+files = ["src"]
+exclude = ["(?x)(^tests/|^scripts/|^data/|^checkpoints/|^models/|^mlruns/)"]
+show_error_codes = true
+pretty = true
+warn_unused_configs = false
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+strict_equality = true
+extra_checks = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+no_implicit_reexport = true
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = [
+    "torch",
+    "torch.*",
+    "transformers",
+    "transformers.*",
+    "datasets",
+    "datasets.*",
+    "mlflow",
+    "mlflow.*",
+    "hydra",
+    "hydra.*",
+    "omegaconf",
+    "omegaconf.*",
+    "gliner",
+    "gliner.*",
+    "seqeval",
+    "seqeval.*",
+    "accelerate",
+    "accelerate.*",
+    "huggingface_hub",
+    "huggingface_hub.*",
+]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 minversion = "8.0"

@@ -1,14 +1,18 @@
-.PHONY: sync lint fmt test hooks mlflow-ui dvc-init dvc-repro dvc-exp pipeline
+.PHONY: sync lint fmt typecheck test hooks mlflow-ui dvc-init dvc-repro dvc-exp pipeline
 
 sync:
 	uv sync --all-groups
 
-lint:
+lint: typecheck
 	uv run ruff check src tests scripts
 	uv run ruff format --check src tests scripts
 
 fmt:
 	uv run ruff format src tests scripts
+	uv run ruff check --fix src tests scripts
+
+typecheck:
+	uv run mypy
 
 test:
 	uv run pytest

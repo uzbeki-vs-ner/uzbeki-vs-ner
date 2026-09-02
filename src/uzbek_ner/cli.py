@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 from hydra import compose, initialize_config_dir
 from loguru import logger
+from omegaconf import DictConfig
 from rich.console import Console
 
 from uzbek_ner.pipeline import run_evaluate, run_prepare, run_train
@@ -18,7 +19,7 @@ app = typer.Typer(
 console = Console()
 
 
-def _load_config(config_name: str = "default") -> object:
+def _load_config(config_name: str = "default") -> DictConfig:
     config_dir = str(REPO_ROOT / "configs")
     with initialize_config_dir(config_dir=config_dir, version_base=None):
         return compose(config_name=config_name)
