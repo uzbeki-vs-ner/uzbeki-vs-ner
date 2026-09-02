@@ -1,5 +1,5 @@
 .PHONY: sync lint fmt typecheck test hooks mlflow-ui dvc-init dvc-repro dvc-exp pipeline \
-	download-models download-external check-api evaluate-official evaluate-service-official \
+	download-models download-external bench-gpu check-api evaluate-official evaluate-service-official \
 	service docker-build docker-run
 
 # Lint/test contract (CI calls `make lint` then `make test` — keep this order):
@@ -59,6 +59,10 @@ download-models:
 
 download-external:
 	uv run python scripts/download_external_datasets.py
+
+# GPU lock: flock so other jobs (EMA, etc.) do not collide.
+bench-gpu:
+	flock outputs/.gpu.lock uv run python scripts/bench_finetune.py --phase gpu
 
 # Local uvicorn (CPU stub). One worker matches a future single-GPU model process.
 service:
