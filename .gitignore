@@ -13,9 +13,12 @@ ENV/
 dist/
 build/
 
-# Runtime outputs — keep only the placeholder
+# Runtime outputs — keep only the placeholder (EDA/EMA JSON, plots)
 /outputs/*
 !/outputs/.gitkeep
+# Explicit: analysis dumps must never be committed
+/outputs/eda/
+/outputs/ema/
 
 # IDE / tooling (commit shared Cursor rules, ignore the rest)
 .vscode/
