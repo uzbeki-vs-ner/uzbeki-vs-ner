@@ -1,5 +1,6 @@
 .PHONY: sync lint fmt typecheck test hooks mlflow-ui dvc-init dvc-repro dvc-exp pipeline \
-	download-models download-external check-api evaluate-official evaluate-service-official
+	download-models download-external check-api evaluate-official evaluate-service-official \
+	service docker-build docker-run
 
 # Lint/test contract (CI calls `make lint` then `make test` — keep this order):
 #   ruff check → ruff format --check → mypy → pytest
@@ -9,6 +10,9 @@ OFFICIAL_DEV := $(CURDIR)/data/official/dev.jsonl
 PREDICTIONS ?= $(CURDIR)/outputs/official/dev_predictions.jsonl
 METRICS_OUT ?= $(CURDIR)/outputs/official/dev_metrics.json
 SERVICE_URL ?= http://localhost:8000
+SERVICE_HOST ?= 0.0.0.0
+SERVICE_PORT ?= 8000
+DOCKER_IMAGE ?= ner-uz-solution
 
 sync:
 	uv sync --all-groups
@@ -55,6 +59,18 @@ download-models:
 
 download-external:
 	uv run python scripts/download_external_datasets.py
+
+# Local uvicorn (CPU stub). One worker matches a future single-GPU model process.
+service:
+	uv run uvicorn uzbek_ner.service.app:app --host $(SERVICE_HOST) --port $(SERVICE_PORT) --workers 1
+
+# Organizers: docker build -t ner-uz-solution . && docker run --rm -p 8000:8000 ner-uz-solution
+# Stub image is CPU-only. A later GPU model will need: docker run --rm --gpus all -p 8000:8000 …
+docker-build:
+	docker build -t $(DOCKER_IMAGE) .
+
+docker-run:
+	docker run --rm -p 8000:8000 $(DOCKER_IMAGE)
 
 check-api:
 	uv run python scripts/run_official_tooling.py check-api --url $(SERVICE_URL)

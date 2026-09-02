@@ -37,6 +37,12 @@ dev = [
     "pytest>=8.3",
     "ruff>=0.9",
 ]
+# Slim Docker image: HTTP runtime only (no torch / transformers / HuggingFace).
+service = [
+    "fastapi>=0.115",
+    "pydantic>=2.8",
+    "uvicorn[standard]>=0.34",
+]
 
 [project.scripts]
 ner = "uzbek_ner.cli:app"

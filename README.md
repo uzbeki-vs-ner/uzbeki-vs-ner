@@ -7,7 +7,7 @@
 
 - **Python 3.11+**, [uv](https://docs.astral.sh/uv/) — зависимости и lockfile
 - **PyTorch + Transformers** — обучение и инференс
-- **FastAPI** — HTTP-сервис (будет добавлен по мере реализации)
+- **FastAPI** — HTTP-сервис инференса (`GET /healthz`, `POST /api/v1/predict`)
 - **MLflow** — эксперименты, метрики, артефакты (`sqlite:///mlflow.db`)
 - **DVC** — версионирование данных и воспроизводимый пайплайн (`dvc.yaml`)
 - **Hydra + Typer** — конфиги и CLI
@@ -82,7 +82,8 @@ CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — Python 3.11, `uv 
 ├── configs/              # Hydra
 ├── params.yaml           # DVC params
 ├── dvc.yaml              # DVC pipeline (committed; cache is not)
-├── src/uzbek_ner/        # код
+├── Dockerfile            # stub inference image (no torch)
+├── src/uzbek_ner/        # код (включая service/)
 ├── tests/
 ├── scripts/
 ├── data/official/        # организаторы (jsonl/zip/bundle gitignored)
@@ -107,6 +108,31 @@ make test         # pytest
 
 Pre-commit гоняет `ruff-format` и `ruff` по `src|tests|scripts` и `uv run mypy` по `src/`. Pytest — только `make test` / CI.
 
+## HTTP-сервис (контракт организаторов)
+
+Слушает `0.0.0.0:8000`. Оценённый API — **один JSON-объект после всего батча** (не SSE/WebSocket). Пока бэкенд — детерминированный gazetteer-заглушка: без весов HuggingFace и без GPU. Настоящая модель позже подменит `StubNerBackend`.
+
+Локально:
+
+```bash
+make service                 # uvicorn, 1 worker
+make check-api               # official scripts/check_service.py → http://localhost:8000
+```
+
+Docker (без монтирований, без обязательных env, без интернета в runtime):
+
+```bash
+docker build -t ner-uz-solution .
+docker run --rm -p 8000:8000 ner-uz-solution
+# или: make docker-build && make docker-run
+```
+
+Образ stub — **CPU-only**. Когда появится GPU-модель, запуск будет:
+
+```bash
+docker run --rm --gpus all -p 8000:8000 ner-uz-solution
+```
+
 ## Команды
 
 ```bash
@@ -114,4 +140,5 @@ make sync fmt lint test
 uv run ner prepare
 uv run ner train
 uv run ner evaluate
+make service
 ```
