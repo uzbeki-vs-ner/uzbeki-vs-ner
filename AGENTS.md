@@ -1,5 +1,9 @@
 # Agent notes
 
+## Текущий подход и замеры
+
+Перед сменой бэкбона, головы или дефолтного decode читать [`docs/CURRENT_APPROACH.md`](docs/CURRENT_APPROACH.md) (русский срез на ветке `notes/current-approach`). Кратко: uztext + линейная голова + word snap; τ=0.7 измерен и **не** в дефолте; MLP / Mix B 1:1 / min_p / Platt / дописка слова лидерборд не поднимают. Бэкбон не менять.
+
 ## GitHub is a code platform
 
 Do not commit datasets, zip archives, jsonl dumps, pretrained weights, checkpoints, MLflow stores, or virtualenvs. Track README / CATALOG / `.gitkeep` / DVC pipeline files (`dvc.yaml`, `dvc.lock`) only.
