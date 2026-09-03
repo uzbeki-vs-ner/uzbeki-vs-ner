@@ -69,6 +69,13 @@ ignore = [
     "RUF003",  # project copy uses en/em dashes
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Reading-guide copy is Russian (Cyrillic vs Latin lookalikes trip RUF001).
+"src/uzbek_ner/evaldash/*.py" = ["RUF001"]
+"uzbek_ner/evaldash/*.py" = ["RUF001"]
+"src/uzbek_ner/metrics/error_analysis.py" = ["RUF001"]
+"uzbek_ner/metrics/error_analysis.py" = ["RUF001"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["uzbek_ner"]
 
@@ -117,6 +124,8 @@ module = [
     "gliner.*",
     "seqeval",
     "seqeval.*",
+    "tqdm",
+    "tqdm.*",
     "accelerate",
     "accelerate.*",
     "huggingface_hub",

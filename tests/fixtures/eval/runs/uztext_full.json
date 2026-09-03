@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "run_id": "uztext_full",
+  "model": "rifkat/uztext-3Gb-BPE-Roberta",
+  "checkpoint": "checkpoints/uztext_full",
+  "created_at": "2026-09-02T08:00:00+00:00",
+  "split": "official_dev",
+  "hyperparams": {"epochs": 3, "batch_size": 16},
+  "metrics": {
+    "schema_version": 1,
+    "matching": "same hash and exact label/start/end",
+    "records": 1500,
+    "by_label": {
+      "ORG": {
+        "precision": 0.84,
+        "recall": 0.8,
+        "f1": 0.8195121951,
+        "tp": 80,
+        "fp": 15,
+        "fn": 20,
+        "gold": 100,
+        "predicted": 95
+      },
+      "NAME": {
+        "precision": 0.82,
+        "recall": 0.78,
+        "f1": 0.7995,
+        "tp": 78,
+        "fp": 17,
+        "fn": 22,
+        "gold": 100,
+        "predicted": 95
+      },
+      "GEO": {
+        "precision": 0.86,
+        "recall": 0.81,
+        "f1": 0.834251497,
+        "tp": 81,
+        "fp": 13,
+        "fn": 19,
+        "gold": 100,
+        "predicted": 94
+      }
+    },
+    "micro": {
+      "precision": 0.839857651,
+      "recall": 0.7966666667,
+      "f1": 0.8176895307,
+      "tp": 239,
+      "fp": 45,
+      "fn": 61,
+      "gold": 300,
+      "predicted": 284
+    },
+    "macro": {
+      "precision": 0.84,
+      "recall": 0.7966666667,
+      "f1": 0.817754564
+    }
+  },
+  "paths": {
+    "gold": "data/official/dev.jsonl",
+    "predictions": "outputs/official/uztext_full_dev_predictions.jsonl",
+    "metrics": "outputs/official/uztext_full_dev_metrics.json"
+  }
+}

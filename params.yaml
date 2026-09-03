@@ -17,3 +17,22 @@ train:
 
 evaluate:
   batch_size: 32
+  gold: data/official/dev.jsonl
+  predictions: outputs/official/dev_predictions.jsonl
+  metrics_out: outputs/official/dev_metrics.json
+  run_id: dvc_evaluate
+  split: official_dev
+
+calibrate:
+  checkpoint: checkpoints/uztext_smoke
+  cache_dir: outputs/cache/uztext_smoke_official_dev
+  gold: data/official/dev.jsonl
+  output: outputs/eval/threshold.json
+  metrics_out: threshold_metrics.json
+  fill_cache: true
+  taus: [0.0, 0.3, 0.5, 0.7]
+  k: 5
+  seed: 42
+  batch_size: 8
+  max_length: 512
+  stride: 128

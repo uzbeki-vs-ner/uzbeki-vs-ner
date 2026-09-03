@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "run_id": "gazetteer_stub",
+  "model": "stub-gazetteer",
+  "checkpoint": "none",
+  "created_at": "2026-09-01T10:00:00+00:00",
+  "split": "official_dev",
+  "hyperparams": {},
+  "metrics": {
+    "schema_version": 1,
+    "matching": "same hash and exact label/start/end",
+    "records": 1500,
+    "by_label": {
+      "ORG": {
+        "precision": 0.5,
+        "recall": 0.3,
+        "f1": 0.375,
+        "tp": 30,
+        "fp": 30,
+        "fn": 70,
+        "gold": 100,
+        "predicted": 60
+      },
+      "NAME": {
+        "precision": 0.55,
+        "recall": 0.4,
+        "f1": 0.4631578947,
+        "tp": 40,
+        "fp": 33,
+        "fn": 60,
+        "gold": 100,
+        "predicted": 73
+      },
+      "GEO": {
+        "precision": 0.6,
+        "recall": 0.35,
+        "f1": 0.4421052632,
+        "tp": 35,
+        "fp": 23,
+        "fn": 65,
+        "gold": 100,
+        "predicted": 58
+      }
+    },
+    "micro": {
+      "precision": 0.5502617801,
+      "recall": 0.35,
+      "f1": 0.4280155642,
+      "tp": 105,
+      "fp": 86,
+      "fn": 195,
+      "gold": 300,
+      "predicted": 191
+    },
+    "macro": {
+      "precision": 0.55,
+      "recall": 0.35,
+      "f1": 0.4267543859
+    }
+  },
+  "paths": {
+    "gold": "tests/fixtures/official_metrics/gold.jsonl",
+    "predictions": "tests/fixtures/eval/predictions_stub.jsonl",
+    "metrics": "tests/fixtures/eval/gazetteer_stub_metrics.json"
+  }
+}

@@ -7,8 +7,9 @@
 
 - **Python 3.11+**, [uv](https://docs.astral.sh/uv/) — зависимости и lockfile
 - **PyTorch + Transformers** — обучение и инференс
-- **FastAPI** — HTTP-сервис инференса (`GET /healthz`, `POST /api/v1/predict`)
+- **FastAPI** — HTTP-сервис инференса (`GET /healthz`, `POST /api/v1/predict`) и CPU eval-API (`127.0.0.1:8050`)
 - **MLflow** — эксперименты, метрики, артефакты (`sqlite:///mlflow.db`)
+- **Grafana + Prometheus** — сравнение моделей по official exact-span (поверх MLflow, не вместо)
 - **DVC** — версионирование данных и воспроизводимый пайплайн (`dvc.yaml`)
 - **Hydra + Typer** — конфиги и CLI
 - **Ruff + MyPy + pre-commit** — форматирование, линт и проверка типов
@@ -42,10 +43,13 @@ git add data/raw/*.dvc .gitignore
 ```bash
 make pipeline          # prepare → train → evaluate (CLI)
 make dvc-repro         # то же через DVC (рекомендуется для сдачи)
+make calibrate-threshold   # отдельный этап: кэш logits на official dev + сетка τ
 make dvc-exp           # таблица экспериментов DVC
 ```
 
 Гиперпараметры — `params.yaml` (DVC) и `configs/default.yaml` (Hydra).
+
+Обучение и порог уверенности — **разные этапы**. `prepare → train → evaluate` учит модель и считает exact-span по готовому JSONL. Поиск τ (`ner calibrate` / `make calibrate-threshold`) прогоняет чекпоинт по official dev, кэширует mean-logits и подбирает порог на analysis-fold. Это быстрее эпохи, но всё равно отдельная работа: без кэша нужен GPU (`flock outputs/.gpu.lock`), с кэшем — только CPU. Выбранный τ пишется в `outputs/eval/threshold.json` и `threshold_metrics.json`; в дефолтный decode он сам не включается.
 
 ## MLflow
 
@@ -54,6 +58,18 @@ make mlflow-ui         # http://127.0.0.1:5000
 ```
 
 Эксперименты: `uzbek_ner` (основной), `uzbek_ner_smoke` (отладочные прогоны).
+
+## Сравнение моделей (Grafana)
+
+MLflow остаётся логом экспериментов. Для визуального сравнения official exact-span (ORG / NAME / GEO) — локальный реестр `outputs/eval/runs/*.json` + Grafana. Подробности: [docs/EVAL_DASHBOARD.md](docs/EVAL_DASHBOARD.md).
+
+```bash
+make register-eval     # gold + predictions → outputs/eval/runs/{run_id}.json
+make eval-api          # http://127.0.0.1:8050  (HTML-таблица и /metrics)
+make eval-stack        # Prometheus :9090, Grafana :3000 (admin/admin)
+```
+
+Дашборд: **NER → Uzbek NER — official exact-span comparison**. Scorer тот же, что у организаторов (`uzbek_ner.metrics.exact_span`).
 
 ## Git
 
@@ -83,7 +99,9 @@ CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — Python 3.11, `uv 
 ├── params.yaml           # DVC params
 ├── dvc.yaml              # DVC pipeline (committed; cache is not)
 ├── Dockerfile            # stub inference image (no torch)
-├── src/uzbek_ner/        # код (включая service/)
+├── docker-compose.eval.yml  # Grafana + Prometheus (scrape host:8050)
+├── eval/                 # provisioning Grafana / Prometheus
+├── src/uzbek_ner/        # код (включая service/ и evaldash/)
 ├── tests/
 ├── scripts/
 ├── data/official/        # организаторы (jsonl/zip/bundle gitignored)
@@ -140,5 +158,8 @@ make sync fmt lint test
 uv run ner prepare
 uv run ner train
 uv run ner evaluate
+uv run ner calibrate     # порог уверенности; не входит в `ner pipeline`
+make calibrate-threshold # то же, под GPU lock
 make service
+make eval-api eval-stack register-eval
 ```

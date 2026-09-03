@@ -1,4 +1,5 @@
 # Воспроизводимый пайплайн: prepare → train → evaluate
+# Порог уверенности — отдельный этап (calibrate): GPU-кэш эвала + CPU-сетка τ.
 # Запуск: uv run dvc repro
 # Сравнение экспериментов: uv run dvc exp show
 
@@ -48,4 +49,22 @@ stages:
           - evaluate
     metrics:
       - metrics.json:
+          cache: false
+
+  calibrate:
+    cmd: uv run ner calibrate
+    deps:
+      - src/uzbek_ner
+      - params.yaml
+      - configs/default.yaml
+    params:
+      - params.yaml:
+          - seed
+          - calibrate
+    outs:
+      - outputs/eval/threshold.json:
+          persist: true
+          cache: false
+    metrics:
+      - threshold_metrics.json:
           cache: false

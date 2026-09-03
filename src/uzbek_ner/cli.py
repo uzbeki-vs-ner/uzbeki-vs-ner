@@ -8,12 +8,12 @@ from loguru import logger
 from omegaconf import DictConfig
 from rich.console import Console
 
-from uzbek_ner.pipeline import run_evaluate, run_prepare, run_train
+from uzbek_ner.pipeline import run_calibrate, run_evaluate, run_prepare, run_train
 from uzbek_ner.settings import REPO_ROOT
 
 app = typer.Typer(
     name="ner",
-    help="Uzbek NER pipeline CLI (prepare / train / evaluate).",
+    help="Uzbek NER pipeline CLI (prepare / train / evaluate / calibrate).",
     no_args_is_help=True,
 )
 console = Console()
@@ -56,10 +56,20 @@ def evaluate(
 
 
 @app.command()
+def calibrate(
+    config_name: str = typer.Option("default", help="Hydra config name under configs/"),
+) -> None:
+    """Sweep entity-confidence τ on cached official-dev logits (GPU fill if needed)."""
+    cfg = _load_config(config_name)
+    path = run_calibrate(cfg)
+    console.print(f"[green]✓[/green] calibrate → {path}")
+
+
+@app.command()
 def pipeline(
     config_name: str = typer.Option("default", help="Hydra config name under configs/"),
 ) -> None:
-    """Run prepare → train → evaluate sequentially."""
+    """Run prepare → train → evaluate. Calibrate is a separate stage."""
     cfg = _load_config(config_name)
     run_prepare(cfg)
     run_train(cfg)

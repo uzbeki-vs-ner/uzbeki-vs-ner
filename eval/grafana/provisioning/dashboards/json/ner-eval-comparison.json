@@ -1,0 +1,545 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 9,
+      "type": "text",
+      "title": "Как читать exact-span micro-F1",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "Это **не** CoNLL-English. Организаторы требуют тот же hash и точные `(label, start, end)` — частичных совпадений нет, суффикс вне спана = полный промах. Жёсткого порога F1 нет (нужны API/Docker).\n\n| F1 | Шкала | Смысл |\n|---:|---|---|\n| **< 0.20** | Сломано / ещё не NER | Случайная голова, stub, frozen probe (~0.05–0.13). |\n| **0.20–0.45** | Слабый смоук | Учится, но ещё не система. |\n| **0.45–0.60** | Рабочий бейзлайн | **≈0.5 не «плохо как ноль»**, но и не продукт. 2 эпохи uztext ≈ **0.58**. |\n| **0.60–0.75** | Конкурентно | **≈0.7 уже хорошо** для этой метрики. |\n| **0.75–0.85** | Сильный хакатон | Можно сдавать; смотри ORG/NAME/GEO и P vs R. |\n| **≥ 0.85** | Отлично / проверь скорер | Редко на strict span + падежи. 0.90 после двух эпох — сначала проверь утечку gold."
+      }
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Latest run micro-F1",
+      "description": "Newest created_at in the registry (not necessarily best F1).",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"micro\"} * on(run_id) group_left() (ner_eval_latest == 1)",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#C2410C", "value": 0.20 },
+              { "color": "#CA8A04", "value": 0.45 },
+              { "color": "#65A30D", "value": 0.60 },
+              { "color": "#15803D", "value": 0.75 },
+              { "color": "#0F766E", "value": 0.85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Latest run precision",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_precision{label=\"micro\"} * on(run_id) group_left() (ner_eval_latest == 1)",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#C2410C", "value": 0.20 },
+              { "color": "#CA8A04", "value": 0.45 },
+              { "color": "#65A30D", "value": 0.60 },
+              { "color": "#15803D", "value": 0.75 },
+              { "color": "#0F766E", "value": 0.85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Latest run recall",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_recall{label=\"micro\"} * on(run_id) group_left() (ner_eval_latest == 1)",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#C2410C", "value": 0.20 },
+              { "color": "#CA8A04", "value": 0.45 },
+              { "color": "#65A30D", "value": 0.60 },
+              { "color": "#15803D", "value": 0.75 },
+              { "color": "#0F766E", "value": 0.85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Latest run id",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_latest == 1",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "name"
+      }
+    },
+    {
+      "id": 5,
+      "type": "barchart",
+      "title": "Micro-F1 by run",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"micro\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "unit": "none",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#C2410C", "value": 0.20 },
+              { "color": "#CA8A04", "value": 0.45 },
+              { "color": "#65A30D", "value": 0.60 },
+              { "color": "#15803D", "value": 0.75 },
+              { "color": "#0F766E", "value": 0.85 }
+            ]
+          },
+          "custom": { "fillOpacity": 80, "gradientMode": "none", "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Micro precision / recall by run",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_precision{label=\"micro\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}} P"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_recall{label=\"micro\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}} R"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "gradientMode": "none", "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "barWidth": 0.7,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Per-class F1 (ORG / NAME / GEO)",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"ORG\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}} ORG"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"NAME\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}} NAME"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"GEO\"}",
+          "instant": true,
+          "legendFormat": "{{run_id}} GEO"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "gradientMode": "none", "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "barWidth": 0.7,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Run comparison (micro exact-span)",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 31 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_f1{label=\"micro\"}",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_precision{label=\"micro\"}",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_recall{label=\"micro\"}",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 4,
+          "custom": { "align": "auto", "inspect": false }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Value #A" }, "properties": [{ "id": "displayName", "value": "micro F1" }] },
+          { "matcher": { "id": "byName", "options": "Value #B" }, "properties": [{ "id": "displayName", "value": "precision" }] },
+          { "matcher": { "id": "byName", "options": "Value #C" }, "properties": [{ "id": "displayName", "value": "recall" }] },
+          {
+            "matcher": { "id": "byName", "options": "micro F1" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "#7F1D1D", "value": null },
+                    { "color": "#C2410C", "value": 0.20 },
+                    { "color": "#CA8A04", "value": 0.45 },
+                    { "color": "#65A30D", "value": 0.60 },
+                    { "color": "#15803D", "value": 0.75 },
+                    { "color": "#0F766E", "value": 0.85 }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "footer": { "show": false }, "cellHeight": "sm" },
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "run_id", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
+              "label": true,
+              "label 1": true,
+              "label 2": true,
+              "label 3": true,
+              "job": true,
+              "job 1": true,
+              "job 2": true,
+              "instance": true,
+              "instance 1": true,
+              "instance 2": true
+            },
+            "renameByName": {
+              "run_id": "run",
+              "model": "model",
+              "split": "split",
+              "Value": "micro F1",
+              "Value #A": "micro F1",
+              "Value #B": "precision",
+              "Value #C": "recall"
+            }
+          }
+        },
+        { "id": "sortBy", "options": { "fields": {}, "sort": [{ "field": "micro F1", "desc": true }] } }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Latest: type-agnostic span F1",
+      "description": "Exact (start,end) ignoring ORG/NAME/GEO. Diagnostic only — not the organizer score. If this is much higher than micro-F1, the model finds spans but confuses types.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 41 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_boundary_f1 * on(run_id) group_left() (ner_eval_latest == 1)",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#C2410C", "value": 0.20 },
+              { "color": "#CA8A04", "value": 0.45 },
+              { "color": "#65A30D", "value": 0.60 },
+              { "color": "#15803D", "value": 0.75 },
+              { "color": "#0F766E", "value": 0.85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Latest: type accuracy @ exact span",
+      "description": "Of predicted/gold spans that already share (start,end), fraction with the correct ORG/NAME/GEO. High + low official F1 = boundary problem, not types.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 41 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_type_accuracy * on(run_id) group_left() (ner_eval_latest == 1)",
+          "instant": true,
+          "legendFormat": "{{run_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#7F1D1D", "value": null },
+              { "color": "#CA8A04", "value": 0.70 },
+              { "color": "#65A30D", "value": 0.85 },
+              { "color": "#15803D", "value": 0.95 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Error buckets (diagnostic counts)",
+      "description": "exact_match = organizer TP. type_mismatch = same offsets, wrong label. partial_* = overlapping but not exact bounds. missed/spurious = no overlap. Not the leaderboard.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ner_eval_error_bucket",
+          "instant": true,
+          "legendFormat": "{{run_id}} {{bucket}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "gradientMode": "none", "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "barWidth": 0.7,
+        "groupWidth": 0.7
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["ner", "eval", "uzbek"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Uzbek NER — official exact-span comparison",
+  "uid": "uzbek-ner-eval",
+  "weekStart": ""
+}

@@ -1,0 +1,41 @@
+# Local Grafana + Prometheus for official exact-span eval comparison.
+#
+# Linux Docker cannot scrape a host process via host.docker.internal on this
+# machine (docker0 is down; compose uses another bridge). Both services use
+# host networking and scrape 127.0.0.1:8050.
+#
+# Start the CPU eval API first: `make eval-api`
+# Then: `make grafana-up`
+#
+# Grafana: http://127.0.0.1:3000  (admin / admin)
+# Prometheus: http://127.0.0.1:9090
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.listen-address=0.0.0.0:9090
+    volumes:
+      - ./eval/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    network_mode: host
+    depends_on:
+      - prometheus
+    environment:
+      GF_SERVER_HTTP_ADDR: 0.0.0.0
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: dark
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./eval/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./eval/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    restart: unless-stopped
