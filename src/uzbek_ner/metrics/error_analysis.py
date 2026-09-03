@@ -6,8 +6,9 @@ micro-F1 is low: wrong type on a perfect span vs jittered boundaries vs misses.
 
 from __future__ import annotations
 
+from itertools import pairwise
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from uzbek_ner.labels import ENTITY_LABELS
 from uzbek_ner.metrics.exact_span import (
@@ -17,6 +18,83 @@ from uzbek_ner.metrics.exact_span import (
 )
 
 Span = tuple[int, int]
+ErrorKind = Literal[
+    "exact",
+    "type_mismatch",
+    "partial_same_type",
+    "partial_diff_type",
+    "spurious",
+]
+
+
+def spans_overlap(start_a: int, end_a: int, start_b: int, end_b: int) -> bool:
+    return end_a > start_b and start_a < end_b
+
+
+def overlapping_gold_entities(
+    pred_key: EntityKey,
+    gold_entities: set[EntityKey],
+) -> list[EntityKey]:
+    _pred_label, pred_start, pred_end = pred_key
+    return sorted(
+        (
+            gold_key
+            for gold_key in gold_entities
+            if spans_overlap(pred_start, pred_end, gold_key[1], gold_key[2])
+        ),
+        key=lambda item: (item[1], item[2]),
+    )
+
+
+def classify_predicted_span(
+    pred_key: EntityKey,
+    gold_entities: set[EntityKey],
+) -> tuple[ErrorKind, list[EntityKey]]:
+    """Mirror ``analyze_span_errors`` buckets for one predicted span."""
+
+    if pred_key in gold_entities:
+        return "exact", []
+
+    pred_label, pred_start, pred_end = pred_key
+    pred_span = (pred_start, pred_end)
+    for gold_key in gold_entities:
+        if (gold_key[1], gold_key[2]) == pred_span and gold_key[0] != pred_label:
+            return "type_mismatch", [gold_key]
+
+    overlaps = overlapping_gold_entities(pred_key, gold_entities)
+    if not overlaps:
+        return "spurious", []
+
+    same_label = [gold_key for gold_key in overlaps if gold_key[0] == pred_label]
+    if same_label:
+        return "partial_same_type", same_label
+    return "partial_diff_type", overlaps
+
+
+def gold_merge_note(
+    pred_key: EntityKey,
+    gold_parts: list[EntityKey],
+    text: str,
+) -> str | None:
+    """Hint when pred looks like a merge of several adjacent gold spans."""
+
+    if len(gold_parts) < 2:
+        return None
+    pred_label, pred_start, pred_end = pred_key
+    if not all(gold_key[0] == pred_label for gold_key in gold_parts):
+        return None
+    part_start = min(gold_key[1] for gold_key in gold_parts)
+    part_end = max(gold_key[2] for gold_key in gold_parts)
+    if pred_start > part_start or pred_end < part_end:
+        return None
+    gaps: list[str] = []
+    ordered = sorted(gold_parts, key=lambda item: item[1])
+    for left, right in pairwise(ordered):
+        gap = text[left[2] : right[1]]
+        if gap:
+            gaps.append(repr(gap))
+    gap_summary = ", ".join(gaps) if gaps else "adjacent"
+    return f"pred likely merges {len(gold_parts)} gold {pred_label} spans (gaps: {gap_summary})"
 
 
 def _prf(tp: int, fp: int, fn: int) -> dict[str, float | int]:

@@ -154,7 +154,7 @@ LR **калибрует** (held-out span ECE 0.201 → 0.068, gap +0.200 → ~0)
 
 ---
 
-## Куда бить дальше (ещё не измерено как рецепт)
+## Куда бить дальше (uztext, ещё не измерено как рецепт)
 
 Починить **границы**, а не порог. Пока частичный FP остаётся FP, модель будет «переуверенной» и F1 упрётся в ~0.70.
 
@@ -165,6 +165,71 @@ LR **калибрует** (held-out span ECE 0.201 → 0.068, gap +0.200 → ~0)
 3. Label smoothing α=0.1 — только если будет новое обучение, не вместо границ.
 
 Ожидание «0.70 → 0.74+» зависит от того, сколько high-conf FP — это обрезанные ФИО и длинные ORG (см. группу 1 в `outputs/error_analysis.txt`: `Ortiqxoʻjayev` ⊂ `Jahongir Ortiqxoʻjayev`, `Mámleketlik` ⊂ длинного министерства).
+
+---
+
+## GLiNER (параллельный трек, не продуктовый дефолт)
+
+Дата среза: **2026-09-03**. База: `urchade/gliner_multi-v2.1` → `checkpoints/gliner_multi_v21` (2 эпохи, official train 13 k, seed 42). **Не менять** на другой GLiNER-base без A/B на dev.
+
+### Рабочий рецепт инференса
+
+| Слой | Значение |
+|---|---|
+| Окна | `max_words=384`, `stride=128` (`uzbek_ner.gliner_windows`) |
+| Порог | **τ=0.5** (τ\*=0.56 даёт +0.001 F1 на full-dev — не трогать) |
+| Постпроцесс | **нет** — uztext snap/boundary на GLiNER **ухудшает** F1 (−0.001…−0.026) |
+| Длинные доки | только windowed; single-pass режет хвост после 384 слов |
+
+Команды:
+
+```bash
+make train-gliner              # FT с нуля (2080 Ti, fp16)
+make eval-gliner-windows       # dev + JSON метрик
+uv run python scripts/calibrate_gliner.py --force-infer   # τ-sweep + кэш
+uv run python scripts/error_analysis_gliner.py            # отчёт ошибок
+```
+
+### Главные цифры (official-dev, 1500 доков, τ=0.5)
+
+| Конфиг | micro-F1 (exact) | Δ |
+|---|---:|---:|
+| single-pass (до окон) | 0.8404 | — |
+| **windowed (дефолт)** | **0.8886** | **+0.048** |
+| windowed + τ=0.56 (analysis pick) | 0.8897 | +0.001 |
+
+По классам (windowed): ORG 0.863, NAME 0.905, GEO 0.899.
+
+Калибровка span-score после окон: ECE ~0.008 на полном пуле кандидатов; при τ≥0.5 всё ещё overconfident (ECE ~0.07).
+
+### Что пробовали и сняли
+
+| Идея | Результат |
+|---|---|
+| Mix B (official + 13k silver, 1 ep continue) | dev F1 **0.8383** (−0.002) — **не рецепт** |
+| snap / boundary postprocess | F1 0.8878…0.8629 — **хуже** |
+| τ-sweep 0.01 | плато 0.5–0.7; operational pick 0.56 ≈ 0.5 |
+
+### Диагностика ошибок (windowed, τ=0.5)
+
+| Корзина | n | комментарий |
+|---|---:|---|
+| exact | 6884 | |
+| partial_same_type | 226 | ~50% спорная разметка, ~31% явная модель |
+| type_mismatch | 66 | ORG↔NAME клубы, GEO↔ORG |
+| missed | 469 | короткие токены, фанфик, капс-объявления |
+| spurious | 567 | |
+
+Потолок **без новых preds**, только мягкая метрика (любой overlap): F1 ≈ **0.933** (+4.5 п.п.). Реалистичный прирост от границ: **+1…3 п.п.**
+
+Ручной разбор partial: `outputs/gliner_partial_review.md`, `scripts/review_gliner_case.py`.
+
+### GLiNER: куда бить безопасно (ещё не замерено end-to-end)
+
+1. **Label descriptions** в GLiNER для ORG/NAME/GEO (гайд хакатона) — дёшево, не ломает окна.
+2. **Дообучение с window-sampling** — батчи из срезов 384 слов, как на инференсе (сейчас FT на полных текстах).
+3. **Ещё 1 эпоха только official** — только если dev не падает; silver Mix B уже минус.
+4. **Не трогать:** snap/boundary, другой τ, склейка соседних имён (часто gold дробит списки).
 
 ---
 
@@ -180,6 +245,9 @@ LR **калибрует** (held-out span ECE 0.201 → 0.068, gap +0.200 → ~0)
 | Калибровка JSON | `outputs/eval/uztext_smoke_calibration.json` |
 | ROC JSON | `outputs/eval/uztext_smoke_roc.json` |
 | Примеры ошибок | `outputs/error_analysis.txt` |
+| GLiNER чекпоинт | `checkpoints/gliner_multi_v21/` |
+| GLiNER кэш / калибровка | `outputs/cache/gliner_multi_v21_official_dev/`, `outputs/eval/gliner_multi_v21_calibration.json` |
+| GLiNER error analysis | `outputs/error_analysis_gliner.txt`, `outputs/gliner_partial_review.md` |
 | Гистограмма TP/FP | `confidence_distribution.png` (корень репо, не коммитить) |
 
 Протокол кэша: `uzbek_ner.modeling.eval_cache.fill_cache` под `flock outputs/.gpu.lock`.
