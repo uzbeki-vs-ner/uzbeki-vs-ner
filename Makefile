@@ -1,7 +1,7 @@
 .PHONY: sync lint fmt typecheck test hooks mlflow-ui dvc-init dvc-repro dvc-exp pipeline \
 	download-models download-external bench-gpu train-uztext-smoke train-uztext-mixb \
-	train-uztext-mlp1 \
-	check-api evaluate-official calibrate-threshold \
+	train-uztext-mlp1 train-uztext-bioes train-gliner train-gliner-mixb \
+	check-api evaluate-official calibrate-threshold eval-gliner-windows \
 	evaluate-service-official service docker-build docker-run \
 	eval-api grafana-up grafana-down eval-stack register-eval tune-decode-kfold
 
@@ -103,12 +103,47 @@ train-uztext-mixb:
 			--epochs 1 --batch-size 16 --max-length 512 --stride 128 \
 			--learning-rate 1e-5
 
+# GLiNER-multi-v2.1 FT on official train. Turing: fp16, not bf16.
+# Pin the 2080 Ti UUID in the environment; the script refuses any other cuda:0.
+train-gliner:
+	env HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
+		PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+		uv run python scripts/train_gliner.py
+
+# Mix B: continue from gliner_multi_v21, 1 epoch, official train + silver (capped).
+# Score only official dev. Does not overwrite checkpoints/gliner_multi_v21.
+train-gliner-mixb:
+	env HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
+		PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+		uv run python scripts/train_gliner.py \
+			--model checkpoints/gliner_multi_v21 \
+			--output-dir checkpoints/gliner_mixb_ep1 \
+			--run-id gliner_mixb_ep1 \
+			--extra-train data/processed/silver/all.jsonl \
+			--extra-cap 13000 \
+			--epochs 1
+
+# Same smoke recipe, BIOES tags (13-way linear head). Does not overwrite uztext_smoke.
+train-uztext-bioes:
+	flock outputs/.gpu.lock env HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+		TOKENIZERS_PARALLELISM=false PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+		uv run python scripts/train_ner.py \
+			--scheme bioes \
+			--output-dir checkpoints/uztext_bioes \
+			--run-id uztext_bioes \
+			--epochs 2 --batch-size 16 --max-length 512 --stride 128
+
 # Entity-confidence τ: GPU encode official dev if cache is cold, then CPU sweep.
 # Separate from train. Does not change predict_records defaults.
 calibrate-threshold:
 	flock outputs/.gpu.lock env HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 		TOKENIZERS_PARALLELISM=false \
 		uv run ner calibrate
+
+# GLiNER sliding-word windows on official dev (max_words=384, stride=128).
+eval-gliner-windows:
+	env HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
+		uv run python scripts/eval_gliner_windows.py
 
 # Local uvicorn (CPU stub). One worker matches a future single-GPU model process.
 service:
