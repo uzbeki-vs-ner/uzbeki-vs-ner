@@ -111,3 +111,26 @@ def test_predict_rejects_missing_text(client: TestClient) -> None:
 def test_predict_rejects_missing_hash(client: TestClient) -> None:
     response = client.post("/api/v1/predict", json=[{"text": LATIN_TEXT}])
     assert 400 <= response.status_code < 500
+
+
+def test_predict_scored_entities_have_no_canon(client: TestClient) -> None:
+    payload = [{"hash": "contract-cyrillic", "text": CYRILLIC_TEXT}]
+    response = client.post("/api/v1/predict", json=payload)
+    assert response.status_code == 200
+    entity = response.json()["data"][0]["entities"][0]
+    assert set(entity) == {"label", "start", "end"}
+
+
+def test_internal_predict_adds_canon(client: TestClient) -> None:
+    payload = [{"hash": "contract-cyrillic", "text": CYRILLIC_TEXT}]
+    response = client.post("/internal/v1/predict", json=payload)
+    assert response.status_code == 200
+    result = response.json()["data"][0]
+    assert result["hash"] == "contract-cyrillic"
+    by_surface = {
+        CYRILLIC_TEXT[entity["start"] : entity["end"]]: entity for entity in result["entities"]
+    }
+    assert by_surface["Тошкентда"]["canon"] == "Тошкент"
+    assert by_surface["Тошкентда"]["start"] == CYRILLIC_TEXT.index("Тошкентда")
+    assert by_surface["Тошкентда"]["end"] == by_surface["Тошкентда"]["start"] + len("Тошкентда")
+    assert by_surface["Алишер Навоий"]["canon"] == "Алишер Навоий"

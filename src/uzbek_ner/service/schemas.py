@@ -54,6 +54,23 @@ class PredictResponse(BaseModel):
     data: list[PredictResult]
 
 
+class CanonicalEntitySpan(EntitySpan):
+    """Scored span plus a sibling canon. Offsets still point at the model surface."""
+
+    canon: str
+
+
+class CanonicalPredictResult(BaseModel):
+    hash: str
+    entities: list[CanonicalEntitySpan] = Field(default_factory=list)
+
+
+class CanonicalPredictResponse(BaseModel):
+    """POST /internal/v1/predict — extra CASE field, not the organizer contract."""
+
+    data: list[CanonicalPredictResult]
+
+
 class HealthResponse(BaseModel):
     status: Literal["ok"]
 

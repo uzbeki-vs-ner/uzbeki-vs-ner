@@ -2,8 +2,8 @@
 
 The scored API is a **non-streaming JSON batch**: POST /api/v1/predict accepts a
 JSON array and returns one JSON object after the whole batch is processed.
-Do not add SSE or WebSocket on the scored routes. Optional streaming would
-belong on unused /internal paths only (not implemented).
+Do not add SSE or WebSocket on the scored routes. Product extras (entity canon)
+live on POST /internal/v1/predict so check_service does not see extra fields.
 """
 
 from __future__ import annotations
@@ -13,8 +13,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request, status
 
+from uzbek_ner.canon import canon_surface
 from uzbek_ner.service.backend import NerBackend, StubNerBackend
-from uzbek_ner.service.schemas import HealthResponse, PredictBatch, PredictResponse, PredictResult
+from uzbek_ner.service.schemas import (
+    CanonicalEntitySpan,
+    CanonicalPredictResponse,
+    CanonicalPredictResult,
+    HealthResponse,
+    PredictBatch,
+    PredictResponse,
+    PredictResult,
+)
 
 
 def create_backend() -> NerBackend:
@@ -52,6 +61,12 @@ def create_app() -> FastAPI:
         predict,
         methods=["POST"],
         response_model=PredictResponse,
+    )
+    application.add_api_route(
+        "/internal/v1/predict",
+        predict_internal,
+        methods=["POST"],
+        response_model=CanonicalPredictResponse,
     )
     return application
 
@@ -97,6 +112,29 @@ async def predict(request: Request, items: PredictBatch) -> PredictResponse:
             )
         aligned.append(result)
     return PredictResponse(data=aligned)
+
+
+def _with_canon(items: PredictBatch, results: list[PredictResult]) -> list[CanonicalPredictResult]:
+    canonical: list[CanonicalPredictResult] = []
+    for item, result in zip(items, results, strict=True):
+        entities = [
+            CanonicalEntitySpan(
+                label=entity.label,
+                start=entity.start,
+                end=entity.end,
+                canon=canon_surface(item.text[entity.start : entity.end]),
+            )
+            for entity in result.entities
+        ]
+        canonical.append(CanonicalPredictResult(hash=result.hash, entities=entities))
+    return canonical
+
+
+async def predict_internal(request: Request, items: PredictBatch) -> CanonicalPredictResponse:
+    """Same batch NER as the scored route, plus a sibling ``canon`` per span."""
+
+    scored = await predict(request, items)
+    return CanonicalPredictResponse(data=_with_canon(items, scored.data))
 
 
 app = create_app()
